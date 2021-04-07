@@ -1,4 +1,4 @@
-package panic
+package kkpanic
 
 import (
 	kklogger "github.com/kklab-com/goth-kklogger"
