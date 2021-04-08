@@ -9,39 +9,43 @@ import (
 	kklogger "github.com/kklab-com/goth-kklogger"
 )
 
-func Call(f func(v interface{})) {
+func Call(f func(r *Caught)) {
 	if v := recover(); v != nil {
-		f(v)
+		buffer := &bytes.Buffer{}
+		pprof.Lookup("goroutine").WriteTo(buffer, 1)
+		c := &Caught{
+			Message:         v,
+			PanicCallStack:  string(debug.Stack()),
+			GoRoutineStacks: buffer.String(),
+		}
+		buffer.Reset()
+		f(c)
 	}
 }
 
 func Log() {
-	if v := recover(); v != nil {
-		buffer := &bytes.Buffer{}
-		pprof.Lookup("goroutine").WriteTo(buffer, 1)
-		switch t := v.(type) {
-		case error:
-			kklogger.ErrorJ("panic.Log", CaughtError{
-				Err:             t.Error(),
-				PanicCallStack:  string(debug.Stack()),
-				GoRoutineStacks: buffer.String(),
-			})
-		}
-	}
+	Call(func(r *Caught) {
+		kklogger.ErrorJ("panic.Log", r)
+	})
 }
 
-func Catch(main func(), panic func(v interface{})) {
+func Catch(main func(), panic func(r *Caught)) {
 	defer Call(panic)
 	main()
 }
 
-type CaughtError struct {
-	Err             string `json:"error,omitempty"`
-	PanicCallStack  string `json:"panic_call_stack,omitempty"`
-	GoRoutineStacks string `json:"go_routine_stacks,omitempty"`
+type Caught struct {
+	Message         interface{} `json:"message,omitempty"`
+	PanicCallStack  string      `json:"panic_call_stack,omitempty"`
+	GoRoutineStacks string      `json:"go_routine_stacks,omitempty"`
 }
 
-func (e *CaughtError) Error() string {
+func (e *Caught) String() string {
 	bs, _ := json.Marshal(e)
+	return string(bs)
+}
+
+func (e *Caught) Error() string {
+	bs, _ := json.Marshal(e.Message)
 	return string(bs)
 }
