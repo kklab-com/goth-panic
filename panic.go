@@ -9,17 +9,26 @@ import (
 	kklogger "github.com/kklab-com/goth-kklogger"
 )
 
+func Convert(v interface{}) *Caught {
+	if v == nil {
+		return nil
+	}
+
+	buffer := &bytes.Buffer{}
+	pprof.Lookup("goroutine").WriteTo(buffer, 1)
+	c := &Caught{
+		Message:         v,
+		PanicCallStack:  string(debug.Stack()),
+		GoRoutineStacks: buffer.String(),
+	}
+
+	buffer.Reset()
+	return c
+}
+
 func Call(f func(r *Caught)) {
 	if v := recover(); v != nil {
-		buffer := &bytes.Buffer{}
-		pprof.Lookup("goroutine").WriteTo(buffer, 1)
-		c := &Caught{
-			Message:         v,
-			PanicCallStack:  string(debug.Stack()),
-			GoRoutineStacks: buffer.String(),
-		}
-		buffer.Reset()
-		f(c)
+		f(Convert(v))
 	}
 }
 
