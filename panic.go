@@ -32,14 +32,31 @@ func Call(f func(r *Caught)) {
 	}
 }
 
+func CallExcept(except interface{}, f func(r *Caught)) {
+	if v := recover(); v != nil && except != v {
+		f(Convert(v))
+	}
+}
+
 func Log() {
 	Call(func(r *Caught) {
 		kklogger.ErrorJ("panic.Log", r)
 	})
 }
 
+func LogExcept(except interface{}) {
+	CallExcept(except, func(r *Caught) {
+		kklogger.ErrorJ("panic.Log", r)
+	})
+}
+
 func Catch(main func(), panic func(r *Caught)) {
 	defer Call(panic)
+	main()
+}
+
+func CatchExcept(main func(), except interface{}, panic func(r *Caught)) {
+	defer CallExcept(except, panic)
 	main()
 }
 
