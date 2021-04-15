@@ -9,7 +9,7 @@ import (
 	kklogger "github.com/kklab-com/goth-kklogger"
 )
 
-func Convert(v interface{}) Caught {
+func Convert(v interface{}) *CaughtImpl {
 	if v == nil {
 		return nil
 	}
