@@ -41,8 +41,9 @@ func TestTry(t *testing.T) {
 			panic(io.EOF)
 		}).Catch(io.EOF, func(caught Caught) {
 			assert.EqualValues(t, "5", val)
+			val = "s"
 		}).Finally(func() {
-			assert.EqualValues(t, "5", val)
+			assert.EqualValues(t, "s", val)
 			val = "6"
 			panic("!")
 		}, func() {
