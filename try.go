@@ -10,10 +10,8 @@ func Try(try func()) SafeCatch {
 }
 
 type SafeCatch interface {
-	Catch(catch func(caught Caught)) SafeFinally
-}
-
-type SafeFinally interface {
+	Catch(err interface{}, catch func(caught Caught)) SafeCatch
+	CatchAll(catch func(caught Caught)) SafeCatch
 	Finally(finally func())
 }
 
@@ -21,7 +19,17 @@ type Safe struct {
 	caught Caught
 }
 
-func (s *Safe) Catch(catch func(caught Caught)) SafeFinally {
+func (s *Safe) Catch(err interface{}, catch func(caught Caught)) SafeCatch {
+	if s.caught != nil {
+		if err == s.caught.Data() {
+			catch(s.caught)
+		}
+	}
+
+	return s
+}
+
+func (s *Safe) CatchAll(catch func(caught Caught)) SafeCatch {
 	if s.caught != nil {
 		catch(s.caught)
 	}
