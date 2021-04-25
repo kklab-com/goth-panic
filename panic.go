@@ -64,6 +64,12 @@ type Caught interface {
 	String() string
 	Error() string
 	Data() interface{}
+	Trace() CaughtTrace
+}
+
+type CaughtTrace interface {
+	CallStackString() string
+	GoroutineStacksString() string
 }
 
 type CaughtImpl struct {
@@ -84,4 +90,16 @@ func (e *CaughtImpl) Error() string {
 
 func (e *CaughtImpl) Data() interface{} {
 	return e.Message
+}
+
+func (e *CaughtImpl) Trace() CaughtTrace {
+	return e
+}
+
+func (e *CaughtImpl) CallStackString() string {
+	return e.CallStack
+}
+
+func (e *CaughtImpl) GoroutineStacksString() string {
+	return e.GoroutineStacks
 }
