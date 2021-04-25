@@ -63,6 +63,7 @@ func CatchExcept(main func(), except interface{}, panic func(r Caught)) {
 type Caught interface {
 	String() string
 	Error() string
+	Data() interface{}
 }
 
 type CaughtImpl struct {
@@ -79,4 +80,8 @@ func (e *CaughtImpl) String() string {
 func (e *CaughtImpl) Error() string {
 	bs, _ := json.Marshal(e.Message)
 	return string(bs)
+}
+
+func (e *CaughtImpl) Data() interface{} {
+	return e.Message
 }
