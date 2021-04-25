@@ -36,11 +36,27 @@ func TestTry(t *testing.T) {
 	})
 
 	Try(func() {
-		val = "5"
-		panic(io.EOF)
-	}).Catch(io.EOF, func(caught Caught) {
-		assert.EqualValues(t, "5", val)
+		Try(func() {
+			val = "5"
+			panic(io.EOF)
+		}).Catch(io.EOF, func(caught Caught) {
+			assert.EqualValues(t, "5", val)
+		}).Finally(func() {
+			assert.EqualValues(t, "5", val)
+			val = "6"
+			panic("!")
+		}, func() {
+			assert.EqualValues(t, "6", val)
+			val = "7"
+			panic("!")
+		}, func() {
+			assert.EqualValues(t, "7", val)
+			val = "8"
+		})
 	}).Finally(func() {
-		assert.EqualValues(t, "5", val)
+		assert.EqualValues(t, "8", val)
+		val = "9"
 	})
+
+	assert.EqualValues(t, "9", val)
 }

@@ -1,7 +1,7 @@
 package kkpanic
 
-func Try(try func()) SafeCatch {
-	safe := &Safe{}
+func Try(try func()) Safe {
+	safe := &SafeImpl{}
 	Catch(try, func(r Caught) {
 		safe.caught = r
 	})
@@ -9,17 +9,17 @@ func Try(try func()) SafeCatch {
 	return safe
 }
 
-type SafeCatch interface {
-	Catch(err interface{}, catch func(caught Caught)) SafeCatch
-	CatchAll(catch func(caught Caught)) SafeCatch
-	Finally(finally func())
+type Safe interface {
+	Catch(err interface{}, catch func(caught Caught)) Safe
+	CatchAll(catch func(caught Caught)) Safe
+	Finally(finally ...func())
 }
 
-type Safe struct {
+type SafeImpl struct {
 	caught Caught
 }
 
-func (s *Safe) Catch(err interface{}, catch func(caught Caught)) SafeCatch {
+func (s *SafeImpl) Catch(err interface{}, catch func(caught Caught)) Safe {
 	if s.caught != nil {
 		if err == s.caught.Data() {
 			catch(s.caught)
@@ -29,7 +29,7 @@ func (s *Safe) Catch(err interface{}, catch func(caught Caught)) SafeCatch {
 	return s
 }
 
-func (s *Safe) CatchAll(catch func(caught Caught)) SafeCatch {
+func (s *SafeImpl) CatchAll(catch func(caught Caught)) Safe {
 	if s.caught != nil {
 		catch(s.caught)
 	}
@@ -37,6 +37,8 @@ func (s *Safe) CatchAll(catch func(caught Caught)) SafeCatch {
 	return s
 }
 
-func (s *Safe) Finally(finally func()) {
-	finally()
+func (s *SafeImpl) Finally(finally ...func()) {
+	for i := len(finally) - 1; i >= 0; i-- {
+		defer finally[i]()
+	}
 }
