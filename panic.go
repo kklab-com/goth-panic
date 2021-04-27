@@ -2,9 +2,12 @@ package kkpanic
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"runtime/debug"
 	"runtime/pprof"
+	"strings"
 
 	kklogger "github.com/kklab-com/goth-kklogger"
 )
@@ -17,9 +20,23 @@ func Convert(v interface{}) *CaughtImpl {
 	buffer := &bytes.Buffer{}
 	pprof.Lookup("goroutine").WriteTo(buffer, 1)
 	c := &CaughtImpl{
-		Message:         v,
+		obj:             v,
 		CallStack:       string(debug.Stack()),
 		GoroutineStacks: buffer.String(),
+	}
+
+	switch cast := v.(type) {
+	case []byte:
+		c.Message = strings.ToUpper(hex.EncodeToString(cast))
+	case string:
+		c.Message = cast
+	case error:
+		c.Message = cast.Error()
+	case fmt.Stringer:
+		c.Message = cast.String()
+	default:
+		bs, _ := json.Marshal(v)
+		c.Message = string(bs)
 	}
 
 	buffer.Reset()
@@ -73,9 +90,10 @@ type CaughtTrace interface {
 }
 
 type CaughtImpl struct {
-	Message         interface{} `json:"message,omitempty"`
-	CallStack       string      `json:"call_stack,omitempty"`
-	GoroutineStacks string      `json:"goroutine_stacks,omitempty"`
+	obj             interface{}
+	Message         string `json:"message,omitempty"`
+	CallStack       string `json:"call_stack,omitempty"`
+	GoroutineStacks string `json:"goroutine_stacks,omitempty"`
 }
 
 func (e *CaughtImpl) String() string {
@@ -84,12 +102,11 @@ func (e *CaughtImpl) String() string {
 }
 
 func (e *CaughtImpl) Error() string {
-	bs, _ := json.Marshal(e.Message)
-	return string(bs)
+	return e.Message
 }
 
 func (e *CaughtImpl) Data() interface{} {
-	return e.Message
+	return e.obj
 }
 
 func (e *CaughtImpl) Trace() CaughtTrace {
