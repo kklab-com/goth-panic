@@ -77,6 +77,12 @@ func CatchExcept(main func(), except interface{}, panic func(r Caught)) {
 	main()
 }
 
+func PanicNonNil(obj interface{}) {
+	if obj != nil {
+		panic(obj)
+	}
+}
+
 type Caught interface {
 	String() string
 	Error() string
