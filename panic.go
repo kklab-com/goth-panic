@@ -67,6 +67,11 @@ func LogExcept(except interface{}) {
 	})
 }
 
+func LogCatch(main func()) {
+	defer Log()
+	main()
+}
+
 func Catch(main func(), panic func(r Caught)) {
 	defer Call(panic)
 	main()
