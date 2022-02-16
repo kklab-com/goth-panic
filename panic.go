@@ -12,6 +12,16 @@ import (
 	kklogger "github.com/kklab-com/goth-kklogger"
 )
 
+func CallStack() string {
+	return string(debug.Stack())
+}
+
+func GoroutineStacks() string {
+	buffer := &bytes.Buffer{}
+	pprof.Lookup("goroutine").WriteTo(buffer, 1)
+	return buffer.String()
+}
+
 func Convert(v interface{}) *CaughtImpl {
 	if v == nil {
 		return nil
