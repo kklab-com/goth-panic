@@ -8,8 +8,6 @@ import (
 	"runtime/debug"
 	"runtime/pprof"
 	"strings"
-
-	kklogger "github.com/kklab-com/goth-kklogger"
 )
 
 func CallStack() string {
@@ -63,23 +61,6 @@ func CallExcept(except interface{}, f func(r Caught)) {
 	if v := recover(); v != nil && except != v {
 		f(Convert(v))
 	}
-}
-
-func Log() {
-	Call(func(r Caught) {
-		kklogger.ErrorJ("panic.Log", r)
-	})
-}
-
-func LogExcept(except interface{}) {
-	CallExcept(except, func(r Caught) {
-		kklogger.ErrorJ("panic.Log", r)
-	})
-}
-
-func LogCatch(main func()) {
-	defer Log()
-	main()
 }
 
 func Catch(main func(), panic func(r Caught)) {
